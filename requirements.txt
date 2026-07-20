@@ -1,0 +1,6 @@
+colorama==0.4.6
+Faker==40.31.0
+mysql-connector-python==9.7.0
+python-dotenv==1.2.2
+tqdm==4.69.0
+tzdata==2026.3
