@@ -150,21 +150,51 @@ edusmart-mysql/
 
 \- \[x] Phase 3 — Conception du schéma MySQL
 
-\- \[ ] Phase 4 — Développement du générateur de données
+\- \[x] Phase 4 — Développement du générateur de données
 
 &#x20;   - \[x] 4a — Bloc Catalogue (modules, cours, quiz) : 50 / 568 / 690 lignes
 
 &#x20;   - \[x] 4a-bis — Export catalogue pour partage inter-équipe
 
-&#x20;   - \[ ] 4b — Bloc Activité (notes, progression, temps\_connexion) : \*\*en attente des student\_codes d'Aissata (LMS-XXXXXX)\*\*
+&#x20;   - \[x] 4b-préalable — Mapping student\_codes depuis PostgreSQL (10 000 codes uniques dérivés)
+
+&#x20;   - \[x] 4b — Bloc Activité : 66 268 progressions / 376 147 notes / 377 047 connexions
+
+&#x20;   - \*\*Total inséré : 820 770 lignes en 2 min 13 s\*\*
 
 \- \[ ] Phase 5 — Introduction des anomalies
 
-\- \[ ] Phase 6 — Insertion massive
+\- \[ ] Phase 6 — Insertion massive (déjà réalisée en 4b)
 
 \- \[ ] Phase 7 — Tests et validation
 
 \- \[ ] Phase 8 — Documentation et livraison
+
+
+
+\## Coordination groupe
+
+
+
+\*\*Décisions arrêtées :\*\*
+
+\- Format `student\_code` : `LMS-XXXXXX` (préfixe LMS + 6 chiffres avec zéros non significatifs)
+
+\- Règle de dérivation depuis PostgreSQL : `LMS-` + `matricule\[3:].zfill(6)` (ex. `ETU00001` → `LMS-000001`)
+
+\- Fenêtre temporelle : 1er septembre 2024 → 30 juin 2026
+
+\- 10 000 étudiants uniques (dérivés depuis les 10 100 lignes d'Aissata, incluant 100 doublons volontaires)
+
+
+
+\*\*Fichiers partagés avec le groupe :\*\*
+
+\- `data/catalogue\_modules.csv` (50 modules)
+
+\- `data/catalogue\_cours\_quiz.csv` (568 cours + 690 quiz)
+
+\- `data/student\_codes.csv` (10 000 codes uniques)
 
 
 

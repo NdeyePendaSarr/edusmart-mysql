@@ -37,12 +37,56 @@ COURS_PAR_MODULE_MAX = 15
 PROBA_QUIZ_PAR_COURS = 0.80  # 80 % des cours auront au moins un quiz
 QUIZ_PAR_COURS_MAX = 2       # jusqu'a 2 quiz max par cours
 
-# Bloc Activite (Phase 4b, apres reception des student_codes d'Aissata)
-NB_NOTES_PAR_ETUDIANT_MIN = 5
-NB_NOTES_PAR_ETUDIANT_MAX = 50
-NB_CONNEXIONS_PAR_ETUDIANT_MIN = 5
-NB_CONNEXIONS_PAR_ETUDIANT_MAX = 30
+# =============================================================
+# BLOC ACTIVITE (Phase 4b, apres reception des student_codes)
+# =============================================================
 
+# Profils d'activite des etudiants (repartition en proportions).
+# Total = 1.0 obligatoirement.
+PROFILS_ACTIVITE = {
+    "inactif":     0.20,  # 20 % ne se connectent quasiment jamais
+    "regulier":    0.50,  # 50 % ont une activite moderee
+    "investi":     0.25,  # 25 % consomment beaucoup
+    "super_actif": 0.05,  # 5  % sont les champions de la plateforme
+}
+
+# Nombre de modules suivis par profil (bornes min/max)
+NB_MODULES_SUIVIS_PAR_PROFIL = {
+    "inactif":     (0, 0),
+    "regulier":    (3, 8),
+    "investi":     (8, 15),
+    "super_actif": (15, 25),
+}
+
+# Nombre de notes (tentatives de quiz) par profil
+NB_NOTES_PAR_PROFIL = {
+    "inactif":     (0, 2),      # les rares actifs de cette categorie
+    "regulier":    (10, 40),
+    "investi":     (40, 100),
+    "super_actif": (100, 200),
+}
+
+# Nombre de connexions par profil
+NB_CONNEXIONS_PAR_PROFIL = {
+    "inactif":     (0, 3),
+    "regulier":    (10, 40),
+    "investi":     (40, 100),
+    "super_actif": (100, 200),
+}
+
+# Duree moyenne d'une session (en minutes) - loi normale approchee
+DUREE_SESSION_MOY_MINUTES = 45
+DUREE_SESSION_ECART_MINUTES = 20
+
+# Devices, browsers, IP pour les connexions
+APPAREILS = ["Mobile", "PC", "Tablette"]
+NAVIGATEURS = ["Chrome", "Firefox", "Safari", "Edge", "Opera"]
+
+# Probabilite qu'un etudiant valide un quiz (score >= 50 % du score_max)
+PROBA_VALIDATION_QUIZ = 0.65
+
+# Nombre max de tentatives pour un meme quiz par un meme etudiant
+NB_TENTATIVES_MAX = 3
 
 # =============================================================
 # FENETRE TEMPORELLE

@@ -3,12 +3,17 @@ insert_data.py — Insertion des donnees generees dans MySQL.
 
 Lit les CSV produits par generate_data.py et les insere dans la base
 edusmart_learning, en respectant :
-  - l'ordre des dependances FK (modules puis cours puis quiz)
+  - l'ordre des dependances FK
   - l'insertion par batch (BATCH_SIZE lignes) pour la performance
   - les transactions (commit par batch, rollback en cas d'erreur)
 
-Etat actuel : BLOC CATALOGUE (modules, cours, quiz).
-Le bloc Activite sera ajoute en 4.4 apres reception des student_codes.
+Ordre d'insertion :
+  1. modules
+  2. cours (FK vers modules)
+  3. quiz (FK vers cours)
+  4. progression (FK vers modules + student_code externe)
+  5. notes (FK vers quiz + student_code externe)
+  6. temps_connexion (student_code externe uniquement)
 """
 
 import csv
@@ -16,7 +21,6 @@ import logging
 import sys
 from pathlib import Path
 
-# --- Racine du projet pour les imports ---
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -30,16 +34,15 @@ from config.generator_config import (
     CSV_MODULES,
     CSV_COURS,
     CSV_QUIZ,
+    CSV_NOTES,
+    CSV_PROGRESSION,
+    CSV_TEMPS_CONNEXION,
     LOGS_DIR,
 )
 
 
-# =============================================================
-# LOGGING
-# =============================================================
-
+# --- Logs ---
 LOGS_DIR.mkdir(exist_ok=True)
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -52,27 +55,24 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================
-# UTILITAIRES D'INSERTION
+# UTILITAIRES
 # =============================================================
 
 def read_csv(path):
     """Lit un CSV UTF-8 avec separateur ';' et retourne une liste de dicts."""
     with open(path, "r", encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f, delimiter=";")
-        return list(reader)
+        return list(csv.DictReader(f, delimiter=";"))
 
 
-def insert_batch(cursor, sql, rows):
-    """Execute une insertion batch avec executemany."""
-    cursor.executemany(sql, rows)
+def none_if_empty(value):
+    """Convertit une chaine vide en None (pour les colonnes NULLables)."""
+    return value if value != "" else None
 
 
 def insert_with_batches(conn, table_name, sql, rows, columns_desc):
     """
-    Insere une liste de tuples dans MySQL par batchs de BATCH_SIZE,
-    avec commit apres chaque batch et barre de progression tqdm.
-
-    En cas d'erreur, rollback du batch en cours et arret du script.
+    Insere une liste de tuples dans MySQL par batchs de BATCH_SIZE.
+    Commit apres chaque batch, rollback + arret en cas d'erreur.
     """
     total = len(rows)
     logger.info(f"Insertion dans {table_name} : {total} lignes ({columns_desc})")
@@ -81,7 +81,6 @@ def insert_with_batches(conn, table_name, sql, rows, columns_desc):
     inserted = 0
 
     try:
-        # tqdm : barre de progression visible dans la console
         with tqdm(total=total, desc=f"  {table_name}", unit="lignes") as pbar:
             for i in range(0, total, BATCH_SIZE):
                 batch = rows[i : i + BATCH_SIZE]
@@ -89,7 +88,6 @@ def insert_with_batches(conn, table_name, sql, rows, columns_desc):
                 conn.commit()
                 inserted += len(batch)
                 pbar.update(len(batch))
-
     except Error as e:
         conn.rollback()
         logger.error(f"ECHEC insertion dans {table_name} apres {inserted} lignes.")
@@ -103,27 +101,18 @@ def insert_with_batches(conn, table_name, sql, rows, columns_desc):
 
 
 # =============================================================
-# INSERTIONS PAR TABLE
+# INSERTIONS - BLOC CATALOGUE
 # =============================================================
 
 def insert_modules(conn):
-    """Insere les modules depuis modules.csv."""
     rows_dict = read_csv(CSV_MODULES)
-
-    # Conversion en tuples ordonnes selon le SQL
     rows = [
         (
-            r["id_module"],
-            r["code_module"],
-            r["nom_module"],
-            r["categorie"],
-            r["niveau"],
-            int(r["duree_heures"]),
-            int(r["actif"]),
+            r["id_module"], r["code_module"], r["nom_module"], r["categorie"],
+            r["niveau"], int(r["duree_heures"]), int(r["actif"]),
         )
         for r in rows_dict
     ]
-
     sql = """
         INSERT INTO modules
             (id_module, code_module, nom_module, categorie, niveau, duree_heures, actif)
@@ -133,22 +122,14 @@ def insert_modules(conn):
 
 
 def insert_cours(conn):
-    """Insere les cours depuis cours.csv (sans la colonne code_cours_temp)."""
     rows_dict = read_csv(CSV_COURS)
-
     rows = [
         (
-            r["id_cours"],
-            r["id_module"],
-            r["titre"],
-            int(r["ordre"]),
-            int(r["duree_minutes"]),
-            r["type_cours"],
-            r["statut"],
+            r["id_cours"], r["id_module"], r["titre"], int(r["ordre"]),
+            int(r["duree_minutes"]), r["type_cours"], r["statut"],
         )
         for r in rows_dict
     ]
-
     sql = """
         INSERT INTO cours
             (id_cours, id_module, titre, ordre, duree_minutes, type_cours, statut)
@@ -158,21 +139,14 @@ def insert_cours(conn):
 
 
 def insert_quiz(conn):
-    """Insere les quiz depuis quiz.csv (sans la colonne code_quiz_temp)."""
     rows_dict = read_csv(CSV_QUIZ)
-
     rows = [
         (
-            r["id_quiz"],
-            r["id_cours"],
-            r["titre"],
-            int(r["nb_questions"]),
-            float(r["score_max"]),
-            int(r["duree_minutes"]),
+            r["id_quiz"], r["id_cours"], r["titre"],
+            int(r["nb_questions"]), float(r["score_max"]), int(r["duree_minutes"]),
         )
         for r in rows_dict
     ]
-
     sql = """
         INSERT INTO quiz
             (id_quiz, id_cours, titre, nb_questions, score_max, duree_minutes)
@@ -182,15 +156,85 @@ def insert_quiz(conn):
 
 
 # =============================================================
+# INSERTIONS - BLOC ACTIVITE
+# =============================================================
+
+def insert_progression(conn):
+    rows_dict = read_csv(CSV_PROGRESSION)
+    rows = [
+        (
+            r["id_progression"],
+            r["student_code"],
+            r["id_module"],
+            float(r["pourcentage"]),
+            none_if_empty(r["dernier_cours"]),
+            r["date_maj"],
+        )
+        for r in rows_dict
+    ]
+    sql = """
+        INSERT INTO progression
+            (id_progression, student_code, id_module, pourcentage, dernier_cours, date_maj)
+        VALUES (%s, %s, %s, %s, %s, %s)
+    """
+    insert_with_batches(conn, "progression", sql, rows, "6 colonnes")
+
+
+def insert_notes(conn):
+    rows_dict = read_csv(CSV_NOTES)
+    rows = [
+        (
+            r["id_note"],
+            r["id_quiz"],
+            r["student_code"],
+            r["date_passage"],
+            float(r["score"]),
+            int(r["tentative"]),
+            int(r["valide"]),
+        )
+        for r in rows_dict
+    ]
+    sql = """
+        INSERT INTO notes
+            (id_note, id_quiz, student_code, date_passage, score, tentative, valide)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    insert_with_batches(conn, "notes", sql, rows, "7 colonnes")
+
+
+def insert_temps_connexion(conn):
+    rows_dict = read_csv(CSV_TEMPS_CONNEXION)
+    rows = [
+        (
+            r["id_connexion"],
+            r["student_code"],
+            r["date_connexion"],
+            none_if_empty(r["date_deconnexion"]),
+            int(r["duree_minutes"]) if r["duree_minutes"] else None,
+            none_if_empty(r["appareil"]),
+            none_if_empty(r["navigateur"]),
+            none_if_empty(r["adresse_ip"]),
+        )
+        for r in rows_dict
+    ]
+    sql = """
+        INSERT INTO temps_connexion
+            (id_connexion, student_code, date_connexion, date_deconnexion,
+             duree_minutes, appareil, navigateur, adresse_ip)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    insert_with_batches(conn, "temps_connexion", sql, rows, "8 colonnes")
+
+
+# =============================================================
 # MAIN
 # =============================================================
 
 def main():
     logger.info("=" * 60)
-    logger.info("Insertion des donnees - BLOC CATALOGUE")
+    logger.info("Insertion des donnees - CATALOGUE + ACTIVITE")
     logger.info("=" * 60)
 
-    # Etape 1 : verifier la config et se connecter
     check_config()
     logger.info(f"Connexion a MySQL : {DB_CONFIG['user']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}")
 
@@ -202,27 +246,34 @@ def main():
 
     logger.info("Connexion etablie.")
 
-    # Etape 2 : inserer dans l'ordre des dependances FK
+    # Insertion dans l'ordre des dependances
     try:
+        # Catalogue
         insert_modules(conn)
         insert_cours(conn)
         insert_quiz(conn)
-    except Error as e:
-        logger.error(f"Arret du script suite a une erreur MySQL.")
+        # Activite
+        insert_progression(conn)
+        insert_notes(conn)
+        insert_temps_connexion(conn)
+    except Error:
+        logger.error("Arret du script suite a une erreur MySQL.")
         conn.close()
         sys.exit(1)
 
-    # Etape 3 : verification finale
-    logger.info("\nVerification post-insertion :")
+    # Verification finale
+    logger.info("")
+    logger.info("Verification post-insertion :")
     cursor = conn.cursor()
-    for table in ["modules", "cours", "quiz"]:
+    for table in ["modules", "cours", "quiz", "progression", "notes", "temps_connexion"]:
         cursor.execute(f"SELECT COUNT(*) FROM {table}")
         count = cursor.fetchone()[0]
-        logger.info(f"  {table:15s} : {count} lignes")
+        logger.info(f"  {table:20s} : {count:>8d} lignes")
     cursor.close()
 
     conn.close()
-    logger.info("\n" + "=" * 60)
+    logger.info("")
+    logger.info("=" * 60)
     logger.info("Insertion terminee avec succes.")
     logger.info("=" * 60)
 
