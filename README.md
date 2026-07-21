@@ -162,7 +162,17 @@ edusmart-mysql/
 
 &#x20;   - \*\*Total inséré : 820 770 lignes en 2 min 13 s\*\*
 
-\- \[ ] Phase 5 — Introduction des anomalies
+\- \[x] Phase 5 — Introduction des anomalies
+
+&#x20;   - \[x] Catalogue de \*\*18 anomalies\*\* documentées (`docs/anomalies.md`)
+
+&#x20;   - \[x] Script `scripts/inject\_anomalies.py` reproductible (seed 4242)
+
+&#x20;   - \[x] \*\*126 306 anomalies volontaires\*\* injectées (\~15.3 % de la base)
+
+&#x20;   - \[x] Anomalie A11 : violation FK explicite avec `foreign\_key\_checks = 0`
+
+&#x20;   - \[x] Anomalie A17 : gestion des collisions sur `UNIQUE(student\_code, id\_module)`
 
 \- \[ ] Phase 6 — Insertion massive (déjà réalisée en 4b)
 
