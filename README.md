@@ -148,9 +148,15 @@ edusmart-mysql/
 
 \- \[x] Phase 2 — Préparation de l'environnement
 
-\- \[ ] Phase 3 — Conception du schéma MySQL
+\- \[x] Phase 3 — Conception du schéma MySQL
 
 \- \[ ] Phase 4 — Développement du générateur de données
+
+&#x20;   - \[x] 4a — Bloc Catalogue (modules, cours, quiz) : 50 / 568 / 690 lignes
+
+&#x20;   - \[x] 4a-bis — Export catalogue pour partage inter-équipe
+
+&#x20;   - \[ ] 4b — Bloc Activité (notes, progression, temps\_connexion) : \*\*en attente des student\_codes d'Aissata (LMS-XXXXXX)\*\*
 
 \- \[ ] Phase 5 — Introduction des anomalies
 
@@ -162,7 +168,23 @@ edusmart-mysql/
 
 
 
-\---
+\## Coordination groupe
+
+
+
+\*\*Décisions arrêtées :\*\*
+
+\- Format `student\_code` : `LMS-XXXXXX` (préfixe LMS + 6 chiffres avec zéros non significatifs), dérivé du matricule PostgreSQL par Aissata.
+
+\- Fenêtre temporelle : 1er septembre 2024 → 30 juin 2026.
+
+
+
+\*\*En attente :\*\*
+
+\- Fichier d'Aissata (PostgreSQL) mis à jour avec colonne `student\_code`.
+
+
 
 
 
