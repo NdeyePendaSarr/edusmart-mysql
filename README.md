@@ -68,6 +68,8 @@ Cette source MySQL représente la \*\*plateforme d'apprentissage en ligne\*\* d'
 
 | Tests automatisés | 30/30 (100 %) |
 
+
+
 \---
 
 
@@ -130,8 +132,6 @@ Le diagramme MCD/MLD est disponible dans `docs/schema\_edusmart\_learning.png`.
 
 \## Structure du dépôt
 
-
-
 edusmart-mysql/
 
 ├── config/ # Configuration Python (chargement .env)
@@ -176,7 +176,9 @@ edusmart-mysql/
 
 │ ├── anomalies.md # Catalogue des 18 anomalies
 
-│ └── tests.md # Documentation des tests
+│ ├── tests.md # Documentation des tests
+
+│ └── synthese.md # Note de synthèse
 
 ├── logs/ # Logs d'exécution (NON versionnés)
 
@@ -290,7 +292,7 @@ FLUSH PRIVILEGES;
 
 
 
-La procédure ci-dessous produit \*\*exactement\*\* l'état de référence : 823 314 lignes dont 126 306 anomalies documentées.
+La procédure ci-dessous produit \*\*exactement\*\* l'état de référence : 826 210 lignes dont 126 515 anomalies documentées.
 
 
 
@@ -308,7 +310,7 @@ python scripts/generate\_data.py
 
 
 
-\# 3. Insérer les 820 770 lignes propres dans MySQL
+\# 3. Insérer les \~822 664 lignes propres dans MySQL
 
 python scripts/insert\_data.py
 
@@ -332,7 +334,7 @@ python tests/test\_data\_quality.py
 
 
 
-> ⚠️ Ne pas rejouer `inject\_anomalies.py` plusieurs fois sur la même base : certaines anomalies ajoutent des lignes (A7, A11), ce qui ferait croître le volume à chaque exécution. La procédure officielle est CREATE + INSERT + INJECT une seule fois.
+> ⚠️ Ne pas rejouer `inject\_anomalies.py` plusieurs fois sur la même base : certaines anomalies ajoutent des lignes (A7, A11), ce qui ferait croître le volume à chaque exécution. La procédure officielle est CREATE + GENERATE + INSERT + INJECT une seule fois.
 
 
 
@@ -352,13 +354,17 @@ python tests/test\_data\_quality.py
 
 \- \[x] \*\*Phase 4\*\* — Développement du générateur de données
 
-&#x20;   - \[x] 4a — Bloc Catalogue (200 modules, 2 305 cours, 2 758 quiz)    - \[x] 4a-bis — Export catalogue pour partage inter-équipe
+&#x20;   - \[x] 4a — Bloc Catalogue (200 modules, 2 305 cours, 2 758 quiz)
+
+&#x20;   - \[x] 4a-bis — Export catalogue pour partage inter-équipe
 
 &#x20;   - \[x] 4b-préalable — Mapping student\_codes depuis PostgreSQL
 
 &#x20;   - \[x] 4b — Bloc Activité (66 256 progressions, 376 629 notes, 376 516 connexions)
 
-&#x20;   - \*\*Total inséré : 822 664 lignes\*\*- \[x] \*\*Phase 5\*\* — Introduction des anomalies
+&#x20;   - \*\*Total inséré : 822 664 lignes\*\*
+
+\- \[x] \*\*Phase 5\*\* — Introduction des anomalies
 
 &#x20;   - \[x] Catalogue de \*\*18 anomalies\*\* documentées (`docs/anomalies.md`)
 
@@ -416,9 +422,9 @@ python tests/test\_data\_quality.py
 
 |---------|--------|---------------|
 
-| `data/catalogue\_modules.csv` | 50 modules | Mouhameth (MongoDB), Seydina (Redis) |
+| `data/catalogue\_modules.csv` | 200 modules | Mouhameth (MongoDB), Seydina (Redis) |
 
-| `data/catalogue\_cours\_quiz.csv` | 790 lignes | Mouhameth, Seydina |
+| `data/catalogue\_cours\_quiz.csv` | \~2 500 lignes | Mouhameth, Seydina |
 
 | `data/student\_codes.csv` | 10 000 codes | Mouhameth, Seydina |
 
@@ -437,6 +443,8 @@ python tests/test\_data\_quality.py
 \- \[`docs/anomalies.md`](docs/anomalies.md) — Catalogue complet des 18 anomalies
 
 \- \[`docs/tests.md`](docs/tests.md) — Documentation du script de qualité
+
+\- \[`docs/synthese.md`](docs/synthese.md) — Note de synthèse pour échanges d'équipe
 
 
 

@@ -40,11 +40,13 @@ J'ai construit une base MySQL de \*\*826 210 lignes\*\* simulant la plateforme d
 
 \### Bloc Activité (le comportement des étudiants)
 
-\- \*\*`notes`\*\* — 378 512 tentatives de quiz
+\- \*\*`notes`\*\* — 378 512 tentatives de quiz (table \*\*événementielle\*\* — INSERT à chaque tentative)
 
-\- \*\*`progression`\*\* — 66 919 avancements
+\- \*\*`progression`\*\* — 66 919 avancements (table \*\*snapshot\*\* — UNIQUE par (étudiant, module))
 
 \- \*\*`temps\_connexion`\*\* — 376 516 sessions de connexion
+
+
 
 \---
 
@@ -89,8 +91,6 @@ J'ai construit une base MySQL de \*\*826 210 lignes\*\* simulant la plateforme d
 
 
 \## Pipeline de production — Les 4 scripts
-
-
 
 sql/create\_database.sql → crée les 6 tables (idempotent)
 
@@ -164,7 +164,7 @@ Sur mes 10 000 étudiants LMS :
 
 
 
-\*\*Total : 126 306 lignes anormales sur 823 314 (\~15.3 %)\*\* — proche du taux moyen d'un vrai système opérationnel.
+\*\*Total : 126 515 lignes anormales sur 826 210 (\~15.3 %)\*\* — proche du taux moyen d'un vrai système opérationnel.
 
 
 
@@ -186,9 +186,9 @@ Sur mes 10 000 étudiants LMS :
 
 \- \*\*`student\_codes.csv`\*\* (10 000 codes) → Mouhameth et Seydina utilisent ces codes dans MongoDB et Redis
 
-\- \*\*`catalogue\_modules.csv`\*\* (50 modules) → tous les `code\_module` référencables
+\- \*\*`catalogue\_modules.csv`\*\* (200 modules) → tous les `code\_module` référençables
 
-\- \*\*`catalogue\_cours\_quiz.csv`\*\* (790 lignes) → tous les `code\_cours` et `code\_quiz`
+\- \*\*`catalogue\_cours\_quiz.csv`\*\* (\~2 500 lignes) → tous les `code\_cours` et `code\_quiz`
 
 
 
@@ -238,7 +238,7 @@ Parce que les anomalies interagissent entre elles. Par exemple, une ligne peut a
 
 
 
-L'anomalie A17 remplace le `student\_code` par un fantôme LMS-999XXX (999 valeurs possibles). Sur 669 UPDATE, le paradoxe des anniversaires rend les collisions probables. J'ai ajouté une gestion à 5 tentatives par UPDATE : si le couple (fantôme, module) existe déjà, je re-tire un fantôme. Dans mon dataset final, aucune collision non résolue.
+L'anomalie A17 remplace le `student\_code` par un fantôme LMS-999XXX (999 valeurs possibles). Sur 669 UPDATE, le paradoxe des anniversaires rend les collisions probables. J'ai ajouté une gestion à 20 tentatives par UPDATE : si le couple (fantôme, module) existe déjà, je re-tire un fantôme. Dans mon dataset final, aucune collision non résolue.
 
 
 
@@ -295,4 +295,6 @@ Un script Python de 30 tests automatisés en 30 secondes : `python tests/test\_d
 4\. \*\*Coordination proactive du groupe\*\* — j'ai produit et partagé les 3 fichiers dont Mouhameth et Seydina avaient besoin sans qu'ils me le demandent
 
 5\. \*\*Documentation complète\*\* — README, schéma, anomalies, tests : tout est écrit
+
+6\. \*\*Conformité stricte à la spec\*\* — 200 modules pour "plusieurs centaines", 2 305 cours, \~378K notes, \~376K connexions
 
