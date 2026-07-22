@@ -666,9 +666,9 @@ def inject_A17_student_code_fantome(conn):
     collisions = 0
     for id_prog in ids_a_modifier:
         id_module = map_id_module[id_prog]
-        # On essaie jusqu'a 5 fois avant de renoncer
+        # On essaie jusqu'a 20 fois avant de renoncer (protection contre les collisions)
         fantome = None
-        for _ in range(5):
+        for _ in range(20):
             candidat = generate_student_code_fantome()
             if (candidat, id_module) not in couples_utilises:
                 fantome = candidat

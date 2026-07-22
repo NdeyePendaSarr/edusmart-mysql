@@ -49,12 +49,12 @@ logger = logging.getLogger(__name__)
 # =============================================================
 
 VOLUMES_ATTENDUS = {
-    "modules": 50,
-    "cours": 568,
-    "quiz": 690,
-    "progression": 66931,     # 66268 propres + 663 fantomes A11
-    "notes": 378028,          # 376147 propres + 1881 doublons A7
-    "temps_connexion": 377047,
+    "modules": 200,
+    "cours": 2305,
+    "quiz": 2758,
+    "progression": 66919,     # 66256 propres + 663 fantomes A11
+    "notes": 378512,          # 376629 propres + 1883 doublons A7
+    "temps_connexion": 376516,
 }
 
 # Tolerance de +/- 3 % pour les tests statistiques
@@ -125,26 +125,25 @@ def tests_volumetrie(cursor):
 # =============================================================
 
 ANOMALIES_ATTENDUES = {
-    "A1_categories_desordonnees":  30,
-    "A2_modules_inactifs":          4,
-    "A3_cours_doublons_titre":     17,
-    "A4_type_cours_variantes":     37,  # 53 UPDATE, 16 sans effet (valeur propre re-tiree)
-    "A5_quiz_duree_incoherente":   21,
-    "A6_notes_score_superieur":  3761,
-    "A7_notes_doublons":         1881,
+    "A1_categories_desordonnees":  112,
+    "A2_modules_inactifs":          16,
+    "A3_cours_doublons_titre":      69,
+    "A4_type_cours_variantes":     140,  # 200 UPDATE, ~60 sans effet (valeur propre re-tiree)
+    "A5_quiz_duree_incoherente":    83,
+    "A6_notes_score_superieur":  3766,
+    "A7_notes_doublons":         1883,
     "A8_progression_sup_100":    1325,
     "A9_progression_negatif":     331,
-    "A10_progression_dernier_cours_fantome": 2651,
+    "A10_progression_dernier_cours_fantome": 2650,
     "A11_progression_module_fantome":         663,
-    "A12_connexion_sans_deconnexion": 30164,
-    "A13_connexion_duree_negative":    3770,
-    "A14_connexion_ip_invalide":       7541,
-    "A15_connexion_appareil_variantes": 45246,
-    "A16_connexion_dates_inversees":   1734,
+    "A12_connexion_sans_deconnexion": 30121,
+    "A13_connexion_duree_negative":    3765,
+    "A14_connexion_ip_invalide":       7530,
+    "A15_connexion_appareil_variantes": 45182,
+    "A16_connexion_dates_inversees":   1732,
     "A17_student_code_fantome":        8219,
-    "A18_null_colonnes_nullables":    18895,
+    "A18_null_colonnes_nullables":    18868,
 }
-
 
 def tests_anomalies(cursor):
     """

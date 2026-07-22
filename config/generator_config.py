@@ -27,7 +27,7 @@ FAKER_LOCALE = "fr_FR"
 # =============================================================
 
 # Bloc Catalogue
-NB_MODULES = 50
+NB_MODULES = 200
 
 # Cours : entre MIN et MAX par module (tire aleatoirement pour chaque module)
 COURS_PAR_MODULE_MIN = 8

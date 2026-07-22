@@ -16,7 +16,7 @@
 
 
 
-J'ai construit une base MySQL de \*\*823 314 lignes\*\* simulant la plateforme d'apprentissage EduSmart sur 22 mois, avec \*\*126 306 anomalies volontaires documentées\*\* et un pipeline \*\*totalement reproductible\*\* validé par un script de 30 tests automatisés.
+J'ai construit une base MySQL de \*\*826 210 lignes\*\* simulant la plateforme d'apprentissage EduSmart sur 22 mois, avec \*\*126 515 anomalies volontaires documentées\*\* et un pipeline \*\*totalement reproductible\*\* validé par un script de 30 tests automatisés.
 
 
 
@@ -30,23 +30,21 @@ J'ai construit une base MySQL de \*\*823 314 lignes\*\* simulant la plateforme d
 
 \### Bloc Catalogue (le contenu pédagogique)
 
-\- \*\*`modules`\*\* — 50 modules (Data, IA, DevOps...)
+\- \*\*`modules`\*\* — 200 modules (Data, IA, DevOps...)
 
-\- \*\*`cours`\*\* — 568 cours répartis dans les modules
+\- \*\*`cours`\*\* — 2 305 cours répartis dans les modules
 
-\- \*\*`quiz`\*\* — 690 évaluations liées aux cours
+\- \*\*`quiz`\*\* — 2 758 évaluations liées aux cours
 
 
 
 \### Bloc Activité (le comportement des étudiants)
 
-\- \*\*`notes`\*\* — 378 028 tentatives de quiz (table \*\*événementielle\*\* — INSERT à chaque tentative)
+\- \*\*`notes`\*\* — 378 512 tentatives de quiz
 
-\- \*\*`progression`\*\* — 66 931 avancements (table \*\*snapshot\*\* — UNIQUE par (étudiant, module))
+\- \*\*`progression`\*\* — 66 919 avancements
 
-\- \*\*`temps\_connexion`\*\* — 377 047 sessions de connexion
-
-
+\- \*\*`temps\_connexion`\*\* — 376 516 sessions de connexion
 
 \---
 

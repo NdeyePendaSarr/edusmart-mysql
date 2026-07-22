@@ -48,27 +48,25 @@ Cette source MySQL représente la \*\*plateforme d'apprentissage en ligne\*\* d'
 
 | Tables | 6 (InnoDB, utf8mb4) |
 
-| Volume total | \*\*823 314 lignes\*\* |
+| Volume total | \*\*826 210 lignes\*\* |
 
 | Étudiants LMS référencés | 10 000 |
 
-| Modules | 50 |
+| Modules | 200 |
 
-| Cours | 568 |
+| Cours | 2 305 |
 
-| Quiz | 690 |
+| Quiz | 2 758 |
 
-| Progressions | 66 931 |
+| Progressions | 66 919 |
 
-| Notes | 378 028 |
+| Notes | 378 512 |
 
-| Sessions de connexion | 377 047 |
+| Sessions de connexion | 376 516 |
 
-| Anomalies volontaires | \*\*126 306\*\* (\~15.3 %) |
+| Anomalies volontaires | \*\*126 515\*\* (\~15.3 %) |
 
 | Tests automatisés | 30/30 (100 %) |
-
-
 
 \---
 
@@ -354,23 +352,19 @@ python tests/test\_data\_quality.py
 
 \- \[x] \*\*Phase 4\*\* — Développement du générateur de données
 
-&#x20;   - \[x] 4a — Bloc Catalogue (50 modules, 568 cours, 690 quiz)
-
-&#x20;   - \[x] 4a-bis — Export catalogue pour partage inter-équipe
+&#x20;   - \[x] 4a — Bloc Catalogue (200 modules, 2 305 cours, 2 758 quiz)    - \[x] 4a-bis — Export catalogue pour partage inter-équipe
 
 &#x20;   - \[x] 4b-préalable — Mapping student\_codes depuis PostgreSQL
 
-&#x20;   - \[x] 4b — Bloc Activité (66 268 progressions, 376 147 notes, 377 047 connexions)
+&#x20;   - \[x] 4b — Bloc Activité (66 256 progressions, 376 629 notes, 376 516 connexions)
 
-&#x20;   - \*\*Total inséré : 820 770 lignes en 2 min 13 s\*\*
-
-\- \[x] \*\*Phase 5\*\* — Introduction des anomalies
+&#x20;   - \*\*Total inséré : 822 664 lignes\*\*- \[x] \*\*Phase 5\*\* — Introduction des anomalies
 
 &#x20;   - \[x] Catalogue de \*\*18 anomalies\*\* documentées (`docs/anomalies.md`)
 
 &#x20;   - \[x] Script `scripts/inject\_anomalies.py` reproductible (seed 4242)
 
-&#x20;   - \[x] \*\*126 306 anomalies volontaires\*\* injectées (\~15.3 % de la base)
+&#x20;   - \[x] \*\*126 515 anomalies volontaires\*\* injectées (\~15.3 % de la base)
 
 &#x20;   - \[x] A11 : violation FK explicite avec `foreign\_key\_checks = 0`
 
