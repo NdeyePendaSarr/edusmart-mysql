@@ -20,7 +20,7 @@
 
 
 
-Ce module fait partie du projet EduSmart Decision Platform, dont l'objectif est de construire une plateforme décisionnelle unifiée à partir de cinq sources de données hétérogènes (PostgreSQL, MySQL, CSV, MongoDB, Redis).
+Ce module fait partie du projet \*\*EduSmart Decision Platform\*\*, dont l'objectif est de construire une plateforme décisionnelle unifiée à partir de cinq sources de données hétérogènes (PostgreSQL, MySQL, CSV, MongoDB, Redis).
 
 
 
@@ -28,9 +28,101 @@ Cette source MySQL représente la \*\*plateforme d'apprentissage en ligne\*\* d'
 
 
 
-\- Le catalogue pédagogique : modules, cours, quiz
+\- \*\*Catalogue pédagogique\*\* : modules, cours, quiz
 
-\- L'activité des étudiants : notes, progression, temps de connexion
+\- \*\*Activité des étudiants\*\* : notes, progression, temps de connexion
+
+
+
+\---
+
+
+
+\## Chiffres-clés
+
+
+
+| Élément | Valeur |
+
+|---------|--------|
+
+| Tables | 6 (InnoDB, utf8mb4) |
+
+| Volume total | \*\*823 314 lignes\*\* |
+
+| Étudiants LMS référencés | 10 000 |
+
+| Modules | 50 |
+
+| Cours | 568 |
+
+| Quiz | 690 |
+
+| Progressions | 66 931 |
+
+| Notes | 378 028 |
+
+| Sessions de connexion | 377 047 |
+
+| Anomalies volontaires | \*\*126 306\*\* (\~15.3 %) |
+
+| Tests automatisés | 30/30 (100 %) |
+
+
+
+\---
+
+
+
+\## Architecture technique
+
+
+
+\### Schéma relationnel
+
+
+
+6 tables reliées par 4 clés étrangères :
+
+
+
+\- \*\*`modules`\*\* — Catalogue de modules pédagogiques (Data, IA, DevOps, etc.)
+
+\- \*\*`cours`\*\* — Contenus pédagogiques (Vidéo, PDF, TP, Projet) → référence `modules`
+
+\- \*\*`quiz`\*\* — Évaluations liées aux cours → référence `cours`
+
+\- \*\*`notes`\*\* — Historique événementiel des tentatives de quiz → référence `quiz`
+
+\- \*\*`progression`\*\* — Snapshot unique par (étudiant, module) → référence `modules`
+
+\- \*\*`temps\_connexion`\*\* — Historique des sessions de connexion (indépendant)
+
+
+
+Le diagramme MCD/MLD est disponible dans `docs/schema\_edusmart\_learning.png`.
+
+
+
+\### Choix techniques
+
+
+
+| Décision | Motivation |
+
+|----------|------------|
+
+| Moteur \*\*InnoDB\*\* | Support des FK et transactions |
+
+| Encodage \*\*utf8mb4\*\* + collation \*\*utf8mb4\_unicode\_ci\*\* | Support Unicode complet |
+
+| UUID stockés en \*\*CHAR(36)\*\* | Lisibilité debug > perf pure |
+
+| \*\*FK ON DELETE/UPDATE RESTRICT\*\* | Protection stricte de l'intégrité |
+
+| Aucune FK sur `student\_code` | Identifiant fonctionnel externe, pas une clé technique |
+
+| CHECK volontairement omises sur `progression.pourcentage` et `temps\_connexion.duree\_minutes` | Permettre l'injection d'anomalies pédagogiques |
 
 
 
@@ -44,25 +136,63 @@ Cette source MySQL représente la \*\*plateforme d'apprentissage en ligne\*\* d'
 
 edusmart-mysql/
 
-├── config/         # Configuration Python (chargement .env)
+├── config/ # Configuration Python (chargement .env)
 
-├── sql/            # Scripts SQL (création de base, tables)
+│ ├── db\_config.py
 
-├── scripts/        # Scripts Python (génération et insertion)
+│ └── generator\_config.py # Paramètres de génération et anomalies
 
-├── data/           # Fichiers de données partagés (ex. student\_codes.csv)
+├── sql/
 
-├── docs/           # Documentation technique
+│ └── create\_database.sql # Script idempotent de création du schéma
 
-├── logs/           # Logs d'exécution
+├── scripts/
 
-├── .env            # Secrets (NON versionné)
+│ ├── test\_connection.py # Test de connexion MySQL
 
-├── .env.example    # Modèle de configuration
+│ ├── generate\_data.py # Génération des données propres (seed 42)
+
+│ ├── insert\_data.py # Insertion batch avec transactions
+
+│ ├── export\_catalog.py # Export du catalogue pour le groupe
+
+│ ├── build\_student\_codes.py # Dérivation des student\_codes depuis PostgreSQL
+
+│ └── inject\_anomalies.py # Injection des 18 anomalies (seed 4242)
+
+├── tests/
+
+│ ├── init.py
+
+│ └── test\_data\_quality.py # 30 tests automatisés
+
+├── data/ # Fichiers CSV (NON versionnés)
+
+├── docs/
+
+│ ├── schema.md # Documentation du schéma
+
+│ ├── schema\_edusmart\_learning.png
+
+│ ├── schema\_edusmart\_learning.mwb
+
+│ ├── anomalies.md # Catalogue des 18 anomalies
+
+│ └── tests.md # Documentation des tests
+
+├── logs/ # Logs d'exécution (NON versionnés)
+
+├── .env # Secrets (NON versionné)
+
+├── .env.example # Modèle de configuration
+
+├── .gitignore
 
 ├── requirements.txt
 
 └── README.md
+
+
 
 
 
@@ -88,51 +218,123 @@ edusmart-mysql/
 
 
 
-1\. Cloner le dépôt :
+\*\*1. Cloner le dépôt :\*\*
 
 ```bash
 
-&#x20;  git clone <url-du-depot>
+git clone https://github.com/NdeyePendaSarr/edusmart-mysql.git
 
-&#x20;  cd edusmart-mysql
+cd edusmart-mysql
 
 ```
 
 
 
-2\. Créer et activer l'environnement virtuel :
+\*\*2. Créer et activer l'environnement virtuel :\*\*
 
 ```bash
 
-&#x20;  python -m venv venv
+python -m venv venv
 
-&#x20;  venv\\Scripts\\activate   # Windows
+venv\\Scripts\\activate       # Windows
 
-&#x20;  source venv/bin/activate   # macOS/Linux
+source venv/bin/activate    # macOS/Linux
 
 ```
 
 
 
-3\. Installer les dépendances :
+\*\*3. Installer les dépendances :\*\*
 
 ```bash
 
-&#x20;  pip install -r requirements.txt
+pip install -r requirements.txt
 
 ```
 
 
 
-4\. Configurer les secrets :
+\*\*4. Configurer les secrets :\*\*
 
 ```bash
 
-&#x20;  copy .env.example .env
+copy .env.example .env      # Windows
+
+cp .env.example .env        # macOS/Linux
 
 ```
 
-&#x20;  Puis éditer `.env` avec les vraies valeurs.
+Éditer `.env` avec les identifiants MySQL locaux.
+
+
+
+\*\*5. Créer la base et l'utilisateur applicatif (via root) :\*\*
+
+```sql
+
+CREATE DATABASE edusmart\_learning CHARACTER SET utf8mb4 COLLATE utf8mb4\_unicode\_ci;
+
+CREATE USER 'edusmart\_user'@'localhost' IDENTIFIED BY '<mot\_de\_passe>';
+
+GRANT ALL PRIVILEGES ON edusmart\_learning.\* TO 'edusmart\_user'@'localhost';
+
+FLUSH PRIVILEGES;
+
+```
+
+
+
+\---
+
+
+
+\## Utilisation — Reproduction complète de la base
+
+
+
+La procédure ci-dessous produit \*\*exactement\*\* l'état de référence : 823 314 lignes dont 126 306 anomalies documentées.
+
+
+
+```bash
+
+\# 1. Créer la structure des tables (idempotent : DROP TABLE + CREATE TABLE)
+
+mysql -u root -p edusmart\_learning < sql/create\_database.sql
+
+
+
+\# 2. Générer les données propres (seed 42)
+
+python scripts/generate\_data.py
+
+
+
+\# 3. Insérer les 820 770 lignes propres dans MySQL
+
+python scripts/insert\_data.py
+
+
+
+\# 4. Injecter les 18 anomalies volontaires (seed 4242)
+
+python scripts/inject\_anomalies.py
+
+
+
+\# 5. Valider avec la batterie de tests automatisés
+
+python tests/test\_data\_quality.py
+
+```
+
+
+
+\*\*Résultat attendu :\*\* 30/30 tests réussis.
+
+
+
+> ⚠️ Ne pas rejouer `inject\_anomalies.py` plusieurs fois sur la même base : certaines anomalies ajoutent des lignes (A7, A11), ce qui ferait croître le volume à chaque exécution. La procédure officielle est CREATE + INSERT + INJECT une seule fois.
 
 
 
@@ -144,25 +346,25 @@ edusmart-mysql/
 
 
 
-\- \[x] Phase 1 — Analyse et compréhension de la source
+\- \[x] \*\*Phase 1\*\* — Analyse et compréhension de la source
 
-\- \[x] Phase 2 — Préparation de l'environnement
+\- \[x] \*\*Phase 2\*\* — Préparation de l'environnement
 
-\- \[x] Phase 3 — Conception du schéma MySQL
+\- \[x] \*\*Phase 3\*\* — Conception du schéma MySQL (6 tables, 4 FK, 8 CHECK)
 
-\- \[x] Phase 4 — Développement du générateur de données
+\- \[x] \*\*Phase 4\*\* — Développement du générateur de données
 
-&#x20;   - \[x] 4a — Bloc Catalogue (modules, cours, quiz) : 50 / 568 / 690 lignes
+&#x20;   - \[x] 4a — Bloc Catalogue (50 modules, 568 cours, 690 quiz)
 
 &#x20;   - \[x] 4a-bis — Export catalogue pour partage inter-équipe
 
-&#x20;   - \[x] 4b-préalable — Mapping student\_codes depuis PostgreSQL (10 000 codes uniques dérivés)
+&#x20;   - \[x] 4b-préalable — Mapping student\_codes depuis PostgreSQL
 
-&#x20;   - \[x] 4b — Bloc Activité : 66 268 progressions / 376 147 notes / 377 047 connexions
+&#x20;   - \[x] 4b — Bloc Activité (66 268 progressions, 376 147 notes, 377 047 connexions)
 
 &#x20;   - \*\*Total inséré : 820 770 lignes en 2 min 13 s\*\*
 
-\- \[x] Phase 5 — Introduction des anomalies
+\- \[x] \*\*Phase 5\*\* — Introduction des anomalies
 
 &#x20;   - \[x] Catalogue de \*\*18 anomalies\*\* documentées (`docs/anomalies.md`)
 
@@ -170,51 +372,27 @@ edusmart-mysql/
 
 &#x20;   - \[x] \*\*126 306 anomalies volontaires\*\* injectées (\~15.3 % de la base)
 
-&#x20;   - \[x] Anomalie A11 : violation FK explicite avec `foreign\_key\_checks = 0`
+&#x20;   - \[x] A11 : violation FK explicite avec `foreign\_key\_checks = 0`
 
-&#x20;   - \[x] Anomalie A17 : gestion des collisions sur `UNIQUE(student\_code, id\_module)`
+&#x20;   - \[x] A17 : gestion des collisions sur `UNIQUE(student\_code, id\_module)`
 
-\- \[ ] Phase 6 — Insertion massive (déjà réalisée en 4b)
+\- \[x] \*\*Phase 6\*\* — Insertion massive (réalisée en 4b)
 
-\- \[x] Phase 7 — Tests et validation
+\- \[x] \*\*Phase 7\*\* — Tests et validation
 
 &#x20;   - \[x] Script `tests/test\_data\_quality.py` (30 tests automatisés)
 
-&#x20;   - \[x] 6 tests de volumétrie stricts (100%)
+&#x20;   - \[x] 6 tests de volumétrie stricts (100 %)
 
-&#x20;   - \[x] 18 tests d'anomalies avec tolérance statistique (100%)
+&#x20;   - \[x] 18 tests d'anomalies avec tolérance statistique (100 %)
 
-&#x20;   - \[x] 6 tests d'intégrité relationnelle stricts (100%)
+&#x20;   - \[x] 6 tests d'intégrité relationnelle stricts (100 %)
 
-&#x20;   - \[x] Documentation `docs/tests.md`
-
-\- \[ ] Phase 8 — Documentation et livraison
+\- \[x] \*\*Phase 8\*\* — Documentation et livraison
 
 
 
-\## Coordination groupe
-
-
-
-\*\*Décisions arrêtées :\*\*
-
-\- Format `student\_code` : `LMS-XXXXXX` (préfixe LMS + 6 chiffres avec zéros non significatifs)
-
-\- Règle de dérivation depuis PostgreSQL : `LMS-` + `matricule\[3:].zfill(6)` (ex. `ETU00001` → `LMS-000001`)
-
-\- Fenêtre temporelle : 1er septembre 2024 → 30 juin 2026
-
-\- 10 000 étudiants uniques (dérivés depuis les 10 100 lignes d'Aissata, incluant 100 doublons volontaires)
-
-
-
-\*\*Fichiers partagés avec le groupe :\*\*
-
-\- `data/catalogue\_modules.csv` (50 modules)
-
-\- `data/catalogue\_cours\_quiz.csv` (568 cours + 690 quiz)
-
-\- `data/student\_codes.csv` (10 000 codes uniques)
+\---
 
 
 
@@ -222,19 +400,53 @@ edusmart-mysql/
 
 
 
-\*\*Décisions arrêtées :\*\*
-
-\- Format `student\_code` : `LMS-XXXXXX` (préfixe LMS + 6 chiffres avec zéros non significatifs), dérivé du matricule PostgreSQL par Aissata.
-
-\- Fenêtre temporelle : 1er septembre 2024 → 30 juin 2026.
+\### Décisions arrêtées
 
 
 
-\*\*En attente :\*\*
+\- \*\*Format `student\_code`\*\* : `LMS-XXXXXX` (préfixe LMS + 6 chiffres avec zéros non significatifs)
 
-\- Fichier d'Aissata (PostgreSQL) mis à jour avec colonne `student\_code`.
+\- \*\*Règle de dérivation\*\* depuis PostgreSQL : `"LMS-" + matricule\[3:].zfill(6)` (ex. `ETU00001` → `LMS-000001`)
+
+\- \*\*Fenêtre temporelle\*\* : 1er septembre 2024 → 30 juin 2026
+
+\- \*\*10 000 étudiants uniques\*\* dérivés depuis les 10 100 lignes d'Aissata (100 doublons volontaires côté PostgreSQL)
 
 
+
+\### Fichiers partagés avec le groupe (Google Drive)
+
+
+
+| Fichier | Volume | Destinataires |
+
+|---------|--------|---------------|
+
+| `data/catalogue\_modules.csv` | 50 modules | Mouhameth (MongoDB), Seydina (Redis) |
+
+| `data/catalogue\_cours\_quiz.csv` | 790 lignes | Mouhameth, Seydina |
+
+| `data/student\_codes.csv` | 10 000 codes | Mouhameth, Seydina |
+
+
+
+\---
+
+
+
+\## Documentation complémentaire
+
+
+
+\- \[`docs/schema.md`](docs/schema.md) — Détail des 6 tables, colonnes, contraintes
+
+\- \[`docs/anomalies.md`](docs/anomalies.md) — Catalogue complet des 18 anomalies
+
+\- \[`docs/tests.md`](docs/tests.md) — Documentation du script de qualité
+
+
+
+\---
 
 
 
@@ -242,5 +454,5 @@ edusmart-mysql/
 
 
 
-Ndeye Penda SARR — Cheffe de groupe
+\*\*Ndeye Penda SARR\*\* — Cheffe de groupe
 
