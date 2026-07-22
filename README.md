@@ -176,7 +176,17 @@ edusmart-mysql/
 
 \- \[ ] Phase 6 — Insertion massive (déjà réalisée en 4b)
 
-\- \[ ] Phase 7 — Tests et validation
+\- \[x] Phase 7 — Tests et validation
+
+&#x20;   - \[x] Script `tests/test\_data\_quality.py` (30 tests automatisés)
+
+&#x20;   - \[x] 6 tests de volumétrie stricts (100%)
+
+&#x20;   - \[x] 18 tests d'anomalies avec tolérance statistique (100%)
+
+&#x20;   - \[x] 6 tests d'intégrité relationnelle stricts (100%)
+
+&#x20;   - \[x] Documentation `docs/tests.md`
 
 \- \[ ] Phase 8 — Documentation et livraison
 
